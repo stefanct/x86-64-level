@@ -177,46 +177,48 @@ stdin=false
 assert=
 
 # Parse command-line options
-while [[ $# -gt 0 ]]; do
+while [ $# -gt 0 ]; do
+    case $1 in
     ## Options (--flags):
-    if [[ "$1" == "--help" ]]; then
-        help
-        exit 0
-    elif [[ "$1" == "--version" ]]; then
-        version
-        exit 0
-    elif [[ "$1" == "--verbose" ]]; then
-        verbose=true
-    elif [[ "$1" == "-" ]]; then
-        stdin=true
-    elif [[ "$1" == "--assert" ]]; then
-        verbose=true
+        --help)
+            help
+            exit 0;;
+        --version)
+            version
+            exit 0;;
+        --verbose)
+            verbose=true;;
+        -)
+            stdin=true;;
     ## Options (--key=value):
-    elif [[ "$1" =~ ^--.*=.*$ ]]; then
-        key=${1//--}
-        key=${key//=*}
-        value=${1//--[[:alpha:]]*=}
-        if [[ -z ${value} ]]; then
-            echo >&2 "ERROR: Option '--${key}' must not be empty"
-            exit 2
-        fi
-        if [[ "${key}" == "assert" ]]; then
-            assert=${value}
-            if [[ ! ${assert} =~ ^-?[0-9]+$ ]]; then
-                echo >&2 "ERROR: Option --assert does not specify an integer: ${assert}"
-                exit 2
-            elif [[ ${assert} -lt 1 ]] || [[ ${assert} -gt 4 ]]; then
-                echo >&2 "ERROR: Option --assert is out of range [1,4]: ${assert}"
+        --*=*)
+            pair=${1#--}
+            key=${pair%%=*}
+            value=${pair#*=}
+            if [ -z "${value}" ]; then
+                echo >&2 "ERROR: Option '--${key}' must not be empty"
                 exit 2
             fi
-        else
+            if [ "${key}" = "assert" ]; then
+                case $value in
+                    '' | *[!0-9-]*)
+                    echo >&2 "ERROR: Option --assert does not specify an integer: ${value}"
+                    exit 2
+                esac
+                if [ "${value}" -lt 1 ] || [ "${value}" -gt 4 ]; then
+                    echo >&2 "ERROR: Option --assert is out of range [1,4]: ${value}"
+                    exit 2
+                fi
+                assert=${value}
+            else
+                echo >&2 "ERROR: Unknown option: $key"
+                exit 2
+            fi
+            ;;
+        *)
             echo >&2 "ERROR: Unknown option: $1"
-            exit 2
-        fi
-    else
-        echo >&2 "ERROR: Unknown option: $1"
-        exit 2
-    fi
+            exit 2;;
+    esac
     shift
 done
 
