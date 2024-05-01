@@ -46,6 +46,7 @@
 #' Source code: https://github.com/ucsf-wynton/wynton-tools
 #'
 #' Authors:
+#' * Stefan Tauner (POSIX version)
 #' * Henrik Bengtsson (expanded on Gilles implementation [2])
 #' * StackExchange user 'Gilles'
 #'   <https://stackexchange.com/users/164368/>
