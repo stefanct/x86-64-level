@@ -73,13 +73,13 @@ version() {
 #---------------------------------------------------------------------
 data=
 read_input() {
-    if [[ -z ${data} ]]; then
+    if [ -z "${data}" ]; then
         if ${stdin}; then
             data=$(< /dev/stdin)
         else
             data=$(< /proc/cpuinfo)
         fi
-        if [[ -z ${data} ]]; then
+        if [ -z "${data}" ]; then
             echo >&2 "ERROR: Input data is empty"
             exit 1
         fi
@@ -123,7 +123,7 @@ has_cpu_flags() {
                 if ${verbose}; then
                     msg="Identified x86-64-v${level}, because x86-64-v$((level + 1)) requires '${flag}', which is not supported by this CPU"
                     cpu_name=$(get_cpu_name)
-                    [[ -n ${cpu_name} ]] && msg="${msg} [${cpu_name}]"
+                    [ -n "${cpu_name}" ] && msg="${msg} [${cpu_name}]"
                     echo >&2 "${msg}"
                 fi
                 return 1
@@ -160,7 +160,7 @@ determine_cpu_version() {
 report_cpu_version() {
     read_input
     flags=$(get_cpu_flags)
-    if [[ -z ${flags} ]]; then
+    if [ -z "${flags}" ]; then
         echo >&2 "ERROR: No CPU 'flags' entry in the input data"
         exit 1
     fi
@@ -222,13 +222,13 @@ while [ $# -gt 0 ]; do
     shift
 done
 
-if [[ -n ${assert} ]]; then
+if [ -n "${assert}" ]; then
     validate_cpu_flags
     version=$(report_cpu_version)
-    if [[ ${version} -lt ${assert} ]]; then
+    if [ "${version}" -lt "${assert}" ]; then
         read_input
         cpu_info=$(get_cpu_name)
-        [[ -n ${cpu_info} ]] && cpu_info=" [${cpu_info}]"
+        [ -n "${cpu_info}" ] && cpu_info=" [${cpu_info}]"
         >&2 echo "The CPU${cpu_info} on this host ('$(hostname)') supports x86-64-v${version}, which is less than the required x86-64-v${assert}"
         exit 1
     fi
