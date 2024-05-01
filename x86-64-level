@@ -87,7 +87,6 @@ read_input() {
 }
 
 get_cpu_name() {
-    local name
     bfr=$(grep -E "^model name[[:space:]]*:" <<< "${data}")
     name=$(echo "${bfr}" | head -n 1)
     name="${name#model name*:}"
@@ -96,7 +95,6 @@ get_cpu_name() {
 
 
 get_cpu_flags() {
-    local flags
     flags=$(grep "^flags[[:space:]]*:" <<< "${data}" | head -n 1)
     flags="${flags#*:}"
     flags="${flags## }"
@@ -115,10 +113,6 @@ validate_cpu_flags() {
 
 
 has_cpu_flags() {
-    local flag
-    local msg
-    local cpu_name
-
     for flag; do
         ## Note, it's important to keep a trailing space
         case " ${flags} " in
