@@ -75,9 +75,9 @@ data=
 read_input() {
     if [ -z "${data}" ]; then
         if ${stdin}; then
-            data=$(< /dev/stdin)
+            data=$(cat /dev/stdin)
         else
-            data=$(< /proc/cpuinfo)
+            data=$(cat /proc/cpuinfo)
         fi
         if [ -z "${data}" ]; then
             echo >&2 "ERROR: Input data is empty"
