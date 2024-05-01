@@ -87,18 +87,17 @@ read_input() {
 }
 
 get_cpu_name() {
-    bfr=$(grep -E "^model name[[:space:]]*:" <<< "${data}")
-    name=$(echo "${bfr}" | head -n 1)
+    name=$(echo "${data}" | grep -E "^model name[[:space:]]*:" | head -n 1)
     name="${name#model name*:}"
     echo "${name## }"
 }
 
 
 get_cpu_flags() {
-    flags=$(grep "^flags[[:space:]]*:" <<< "${data}" | head -n 1)
+    flags=$(echo "${data}" | grep "^flags[[:space:]]*:" | head -n 1)
     flags="${flags#*:}"
     flags="${flags## }"
-    if grep -v -q -E "^[[:lower:][:digit:]_ ]+$" <<< "${flags}"; then
+    if [ "${flags}" != "${flags#*[!a-z0-9_ ]*}" ]; then
         echo >&2 "ERROR: Cannot reliably infer the CPU x86-64 level, because the format of the CPU flags comprise of other symbols than only lower-case letters, digits, and underscores: '${flags}'"
         exit 1
     fi
