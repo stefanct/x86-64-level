@@ -233,7 +233,7 @@ if [[ -n ${assert} ]]; then
         read_input
         cpu_info=$(get_cpu_name)
         [[ -n ${cpu_info} ]] && cpu_info=" [${cpu_info}]"
-        >&2 echo "The CPU${cpu_info} on this host ('${HOSTNAME}') supports x86-64-v${version}, which is less than the required x86-64-v${assert}"
+        >&2 echo "The CPU${cpu_info} on this host ('$(hostname)') supports x86-64-v${version}, which is less than the required x86-64-v${assert}"
         exit 1
     fi
 else
