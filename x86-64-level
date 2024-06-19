@@ -98,9 +98,10 @@ get_cpu_name() {
 get_cpu_flags() {
     flags=$(printf '%s\n' "${data}" |
         sed -ne '/^flags[[:space:]]*:/{ s/^flags[[:space:]]*:[[:space:]]*//p;q }')
-    case $flags in (*[!a-z0-9_\ ]*)
-        >&2 printf '%s\n' "ERROR: Cannot reliably infer the CPU x86-64 level, because the format of the CPU flags comprise of other symbols than only lower-case letters, digits, and underscores: '${flags}'"
-        exit 1
+    case $flags in
+        (*[!a-z0-9_\ ]*)
+            >&2 printf '%s\n' "ERROR: Cannot reliably infer the CPU x86-64 level: only a-z, 0-9, and '_' expected in CPU flags; got: '${flags}'"
+            exit 1
     esac
     printf '%s\n' "${flags}"
 }
@@ -123,7 +124,7 @@ has_cpu_flags() {
                 if ${verbose}; then
                     msg="Identified x86-64-v${level}, because x86-64-v$((level + 1)) requires '${flag}', which is not supported by this CPU"
                     cpu_name=$(get_cpu_name)
-                    [ -n "${cpu_name}" ] && msg="${msg} [${cpu_name}]"
+                    msg="${msg}${cpu_name:+ [${cpu_name}]}"
                     >&2 printf '%s\n' "${msg}"
                 fi
                 return 1
