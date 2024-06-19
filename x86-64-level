@@ -108,7 +108,6 @@ get_cpu_flags() {
 
 
 validate_cpu_flags() {
-    read_input
     get_cpu_flags > /dev/null
 }
 
@@ -159,7 +158,6 @@ determine_cpu_version() {
 
 
 report_cpu_version() {
-    read_input
     flags=$(get_cpu_flags)
     if [ -z "${flags}" ]; then
         >&2 printf '%s\n' "ERROR: No CPU 'flags' entry in the input data"
@@ -222,11 +220,11 @@ while [ $# -gt 0 ]; do
     shift
 done
 
+read_input
 if [ -n "${assert}" ]; then
     validate_cpu_flags
     version=$(report_cpu_version)
     if [ "${version}" -lt "${assert}" ]; then
-        read_input
         cpu_info=$(get_cpu_name)
         [ -n "${cpu_info}" ] && cpu_info=" [${cpu_info}]"
         >&2 printf '%s\n' "The CPU${cpu_info} on this host ('$(hostname)') supports x86-64-v${version}, which is less than the required x86-64-v${assert}"
