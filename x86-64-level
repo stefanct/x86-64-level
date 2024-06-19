@@ -118,10 +118,10 @@ has_cpu_flags() {
     for flag; do
         ## Note, it's important to keep a trailing space
         case " ${flags} " in
-            *" ${flag} "*)
+            (*" ${flag} "*)
                 :
                 ;;
-            *)
+            (*)
                 if ${verbose}; then
                     msg="Identified x86-64-v${level}, because x86-64-v$((level + 1)) requires '${flag}', which is not supported by this CPU"
                     cpu_name=$(get_cpu_name)
@@ -182,18 +182,18 @@ assert=
 while [ $# -gt 0 ]; do
     case $1 in
     ## Options (--flags):
-        --help)
+        (--help)
             help
             exit 0;;
-        --version)
+        (--version)
             version
             exit 0;;
-        --verbose)
+        (--verbose)
             verbose=true;;
-        -)
+        (-)
             stdin=true;;
     ## Options (--key=value):
-        --*=*)
+        (--*=*)
             pair=${1#--}
             key=${pair%%=*}
             value=${pair#*=}
@@ -202,8 +202,7 @@ while [ $# -gt 0 ]; do
                 exit 2
             fi
             if [ "${key}" = "assert" ]; then
-                case $value in
-                    '' | *[!0-9-]*)
+                case $value in ('' | *[!0-9-]*)
                     echo >&2 "ERROR: Option --assert does not specify an integer: ${value}"
                     exit 2
                 esac
@@ -217,7 +216,7 @@ while [ $# -gt 0 ]; do
                 exit 2
             fi
             ;;
-        *)
+        (*)
             echo >&2 "ERROR: Unknown option: $1"
             exit 2;;
     esac
