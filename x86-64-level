@@ -83,7 +83,7 @@ read_input() {
             data=$(cat /proc/cpuinfo)
         fi
         if [ -z "${data}" ]; then
-            echo >&2 "ERROR: Input data is empty"
+            >&2 printf '%s\n' "ERROR: Input data is empty"
             exit 1
         fi
     fi
@@ -124,7 +124,7 @@ has_cpu_flags() {
                     msg="Identified x86-64-v${level}, because x86-64-v$((level + 1)) requires '${flag}', which is not supported by this CPU"
                     cpu_name=$(get_cpu_name)
                     [ -n "${cpu_name}" ] && msg="${msg} [${cpu_name}]"
-                    echo >&2 "${msg}"
+                    >&2 printf '%s\n' "${msg}"
                 fi
                 return 1
                 ;;
@@ -161,11 +161,11 @@ report_cpu_version() {
     read_input
     flags=$(get_cpu_flags)
     if [ -z "${flags}" ]; then
-        echo >&2 "ERROR: No CPU 'flags' entry in the input data"
+        >&2 printf '%s\n' "ERROR: No CPU 'flags' entry in the input data"
         exit 1
     fi
     determine_cpu_version
-    echo "${level}"
+    printf '%s\n' "${level}"
 }
 
 
@@ -196,26 +196,26 @@ while [ $# -gt 0 ]; do
             key=${pair%%=*}
             value=${pair#*=}
             if [ -z "${value}" ]; then
-                echo >&2 "ERROR: Option '--${key}' must not be empty"
+                >&2 printf '%s\n' "ERROR: Option '--${key}' must not be empty"
                 exit 2
             fi
             if [ "${key}" = "assert" ]; then
                 case $value in ('' | *[!0-9-]*)
-                    echo >&2 "ERROR: Option --assert does not specify an integer: ${value}"
+                    >&2 printf '%s\n' "ERROR: Option --assert does not specify an integer: ${value}"
                     exit 2
                 esac
                 if [ "${value}" -lt 1 ] || [ "${value}" -gt 4 ]; then
-                    echo >&2 "ERROR: Option --assert is out of range [1,4]: ${value}"
+                    >&2 printf '%s\n' "ERROR: Option --assert is out of range [1,4]: ${value}"
                     exit 2
                 fi
                 assert=${value}
             else
-                echo >&2 "ERROR: Unknown option: $key"
+                >&2 printf '%s\n' "ERROR: Unknown option: $key"
                 exit 2
             fi
             ;;
         (*)
-            echo >&2 "ERROR: Unknown option: $1"
+            >&2 printf '%s\n' "ERROR: Unknown option: $1"
             exit 2;;
     esac
     shift
@@ -228,7 +228,7 @@ if [ -n "${assert}" ]; then
         read_input
         cpu_info=$(get_cpu_name)
         [ -n "${cpu_info}" ] && cpu_info=" [${cpu_info}]"
-        >&2 echo "The CPU${cpu_info} on this host ('$(hostname)') supports x86-64-v${version}, which is less than the required x86-64-v${assert}"
+        >&2 printf '%s\n' "The CPU${cpu_info} on this host ('$(hostname)') supports x86-64-v${version}, which is less than the required x86-64-v${assert}"
         exit 1
     fi
 else
