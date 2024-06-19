@@ -76,9 +76,9 @@ version() {
 #---------------------------------------------------------------------
 data=
 read_input() {
-    if [ -z "${data}" ]; then
+        [ -z "${data}" ] || return 0
         if ${stdin}; then
-            data=$(cat /dev/stdin)
+            data=$(cat)
         else
             data=$(cat /proc/cpuinfo)
         fi
@@ -86,7 +86,6 @@ read_input() {
             >&2 printf '%s\n' "ERROR: Input data is empty"
             exit 1
         fi
-    fi
 }
 
 get_cpu_name() {
