@@ -1,4 +1,6 @@
 #!/usr/bin/env sh
+set -u
+
 #' Get the x86-64 Microarchitecture Level on the Current Machine
 #'
 #' Queries the CPU information to infer which level of x86-64
