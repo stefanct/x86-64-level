@@ -169,8 +169,8 @@ license.
 
 ## Authors
 
-* Stefan Tauner (POSIX version)
-* Henrik Bengtsson (expanded on [Gilles' implementation])
+* [Stefan Tauner](https://github.com/stefanct/), [Alin Mr](https://github.com/mralusw) (POSIX version)
+* [Henrik Bengtsson](https://github.com/HenrikBengtsson) (expanded on [Gilles' implementation])
 * StackExchange user [Gilles]
 * StackExchange user [gioele]
 
