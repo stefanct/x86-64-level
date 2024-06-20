@@ -1,4 +1,6 @@
 #!/usr/bin/env sh
+set -u
+
 #' Get the x86-64 Microarchitecture Level on the Current Machine
 #'
 #' Queries the CPU information to infer which level of x86-64
@@ -61,11 +63,11 @@
 # CLI functions
 #---------------------------------------------------------------------
 help() {
-    grep "^#'" "$0" | sed -E "s/^#' ?//"
+    <"$0" sed -ne "s/^#' \?//p"
 }
 
 version() {
-    grep "^#' Version:" "$0" | sed 's/.* //'
+    <"$0" sed -ne "/^#' Version:/{ s/.* //p;q }"
 }
 
 
@@ -74,41 +76,37 @@ version() {
 #---------------------------------------------------------------------
 data=
 read_input() {
-    if [ -z "${data}" ]; then
+        [ -z "${data}" ] || return 0
         if ${stdin}; then
-            data=$(cat /dev/stdin)
+            data=$(cat)
         else
             data=$(cat /proc/cpuinfo)
         fi
         if [ -z "${data}" ]; then
-            echo >&2 "ERROR: Input data is empty"
+            >&2 printf '%s\n' "ERROR: Input data is empty"
             exit 1
         fi
-    fi
 }
 
 get_cpu_name() {
-    name=$(echo "${data}" | grep -E "^model name[[:space:]]*:" | head -n 1)
-    name="${name#model name*:}"
-    echo "${name## }"
+    printf '%s\n' "${data}" |
+        sed -ne '/^model name[[:space:]]*:/{ s/^model name[[:space:]]*:[[:space:]]*//p;q }'
 }
 
 
 get_cpu_flags() {
-    flags=$(echo "${data}" | grep "^flags[[:space:]]*:" | head -n 1)
-    flags="${flags#*:}"
-    flags="${flags## }"
-    if [ "${flags}" != "${flags#*[!a-z0-9_ ]*}" ]; then
-        echo >&2 "ERROR: Cannot reliably infer the CPU x86-64 level, because the format of the CPU flags comprise of other symbols than only lower-case letters, digits, and underscores: '${flags}'"
-        exit 1
-    fi
-    echo "${flags}"
-}
-
-
-validate_cpu_flags() {
-    read_input
-    get_cpu_flags > /dev/null
+    flags=$(printf '%s\n' "${data}" |
+        sed -ne '/^flags[[:space:]]*:/{ s/^flags[[:space:]]*:[[:space:]]*//p;q }')
+    case $flags in
+        (*[!a-z0-9_\ ]*)
+            >&2 printf '%s\n' "ERROR: Cannot reliably infer the CPU x86-64 level: only a-z, 0-9, and '_' expected in CPU flags; got: '${flags}'"
+            exit 1
+            ;;
+        ('')
+            >&2 printf '%s\n' "ERROR: No CPU 'flags' entry in the input data"
+            exit 1
+            ;;
+    esac
 }
 
 
@@ -116,15 +114,14 @@ has_cpu_flags() {
     for flag; do
         ## Note, it's important to keep a trailing space
         case " ${flags} " in
-            *" ${flag} "*)
+            (*" ${flag} "*)
                 :
                 ;;
-            *)
+            (*)
                 if ${verbose}; then
                     msg="Identified x86-64-v${level}, because x86-64-v$((level + 1)) requires '${flag}', which is not supported by this CPU"
-                    cpu_name=$(get_cpu_name)
-                    [ -n "${cpu_name}" ] && msg="${msg} [${cpu_name}]"
-                    echo >&2 "${msg}"
+                    msg="${msg}${cpu_name:+ [${cpu_name}]}"
+                    >&2 printf '%s\n' "${msg}"
                 fi
                 return 1
                 ;;
@@ -157,18 +154,6 @@ determine_cpu_version() {
 }
 
 
-report_cpu_version() {
-    read_input
-    flags=$(get_cpu_flags)
-    if [ -z "${flags}" ]; then
-        echo >&2 "ERROR: No CPU 'flags' entry in the input data"
-        exit 1
-    fi
-    determine_cpu_version
-    echo "${level}"
-}
-
-
 #---------------------------------------------------------------------
 # MAIN
 #---------------------------------------------------------------------
@@ -180,59 +165,57 @@ assert=
 while [ $# -gt 0 ]; do
     case $1 in
     ## Options (--flags):
-        --help)
+        (--help)
             help
             exit 0;;
-        --version)
+        (--version)
             version
             exit 0;;
-        --verbose)
+        (--verbose)
             verbose=true;;
-        -)
+        (-)
             stdin=true;;
     ## Options (--key=value):
-        --*=*)
+        (--*=*)
             pair=${1#--}
             key=${pair%%=*}
             value=${pair#*=}
             if [ -z "${value}" ]; then
-                echo >&2 "ERROR: Option '--${key}' must not be empty"
+                >&2 printf '%s\n' "ERROR: Option '--${key}' must not be empty"
                 exit 2
             fi
             if [ "${key}" = "assert" ]; then
-                case $value in
-                    '' | *[!0-9-]*)
-                    echo >&2 "ERROR: Option --assert does not specify an integer: ${value}"
+                case $value in ('' | *[!0-9-]*)
+                    >&2 printf '%s\n' "ERROR: Option --assert does not specify an integer: ${value}"
                     exit 2
                 esac
                 if [ "${value}" -lt 1 ] || [ "${value}" -gt 4 ]; then
-                    echo >&2 "ERROR: Option --assert is out of range [1,4]: ${value}"
+                    >&2 printf '%s\n' "ERROR: Option --assert is out of range [1,4]: ${value}"
                     exit 2
                 fi
                 assert=${value}
             else
-                echo >&2 "ERROR: Unknown option: $key"
+                >&2 printf '%s\n' "ERROR: Unknown option: $key"
                 exit 2
             fi
             ;;
-        *)
-            echo >&2 "ERROR: Unknown option: $1"
+        (*)
+            >&2 printf '%s\n' "ERROR: Unknown option: $1"
             exit 2;;
     esac
     shift
 done
 
+read_input
+get_cpu_flags
+determine_cpu_version
+cpu_name=$(get_cpu_name)
+
 if [ -n "${assert}" ]; then
-    validate_cpu_flags
-    version=$(report_cpu_version)
-    if [ "${version}" -lt "${assert}" ]; then
-        read_input
-        cpu_info=$(get_cpu_name)
-        [ -n "${cpu_info}" ] && cpu_info=" [${cpu_info}]"
-        >&2 echo "The CPU${cpu_info} on this host ('$(hostname)') supports x86-64-v${version}, which is less than the required x86-64-v${assert}"
+    if [ "${level}" -lt "${assert}" ]; then
+        >&2 printf '%s\n' "The CPU${cpu_name:+ [${cpu_name}]} on this host ('$(hostname)') supports x86-64-v${level}, which is less than the required x86-64-v${assert}"
         exit 1
     fi
 else
-    validate_cpu_flags
-    report_cpu_version
+    printf '%s\n' "${level}"
 fi

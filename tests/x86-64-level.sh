@@ -338,7 +338,7 @@ for flags in "AVX2" "avx@"; do
         nerrors=$((nerrors + 1))
     fi
 
-    if ! grep -q -E "^ERROR: .*format of the CPU flags" <<< "${stderr}"; then
+    if ! grep -q -E "^ERROR: .* reliably infer .* level" <<< "${stderr}"; then
         >&2 echo "ERROR: Unexpected error message: '${stderr}'"
         nerrors=$((nerrors + 1))
     fi
